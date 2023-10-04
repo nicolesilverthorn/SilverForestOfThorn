@@ -1,0 +1,515 @@
+<!doctype html>
+<html>
+	<head>
+		<html lang="en">
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+		<link rel="stylesheet" href="style.css">
+		<link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon" />
+		<title>The Silver Forest of Thorn</title>		
+	</head>
+	<body>
+		<div id="compass"></div>	
+
+		<div id="splash">
+			<a href="#" id="clicktostart">&nbsp;Start&nbsp;</a>
+		</div>	
+	
+		<div id="stage">
+			<h2>The Silver</h2>
+			<h1>Forest of Thorn</h1>
+			<img src="" alt="The Silver Forest of Thorn" width="300" height="267"></img>
+			<p id="output"></p>
+			<input id="input" type="text" title="Type help if needed"> 
+			<button type="submit">ENTER</button>
+		</div>
+	</body>
+</html>
+
+<script>	
+	//use jquery for fade out on splash screen
+	$('#clicktostart').on('click', function() 
+	{
+		$('#splash').css('opacity', 0);		
+		//remove after fade
+		splash.remove();		
+	});
+
+	
+	//Create the map
+	
+	//   0 | 1 | 2 | 3
+	//  ---|---|---|---
+	//   4 | 5 | 6 | 7
+	//  ---|---|---|---
+	//   8 | 9 | 10| 11
+	//  ---|---|---|---
+	//   12| 13| 14| 15
+	
+	var map = [];
+
+	map[0] = "An old stone keep.";
+	map[1] = "A deep well.";
+	map[2] = "A charming glade.";
+	map[3] = "An enchanted trail.";	
+	map[4] = "A sleeping dragon. It's guarding something.";	
+	map[5] = "A shallow marsh.";
+	map[6] = "A narrow pathway.";
+	map[7] = "A high stone wall.";
+	map[8] = "A dense swamp.";
+	map[9] = "A lonely wooden bench.";	
+	map[10] = "A sunny thicket.";
+	map[11] = "An isolated cottage. Faint music comes from inside.";
+	map[12] = "The edge of a river.";
+	map[13] = "A majestic fountain.";
+	map[14] = "An ancient gate.";
+	map[15] = "A lush garden.";
+
+	//Set the player's start location
+	var mapLocation = 6;
+
+	//Set the images
+	var images = [];
+
+	images[0] = "keep.png";
+	images[1] = "well.png";
+	images[2] = "glade.png";
+	images[3] = "trail.png";
+	images[4] = "dragon.png";
+	images[5] = "marsh.png";
+	images[6] = "path.png";    
+	images[7] = "wall.png";
+	images[8] = "swamp.png";
+	images[9] = "bench.png";
+	images[10] = "thicket.png";
+	images[11] = "cottage.png";
+	images[12] = "river.png";
+	images[13] = "fountain.png";
+	images[14] = "gate.png";
+	images[15] = "garden.png";
+
+	//Set the blocked path messages
+	var blockedPathMessages = [];
+
+	blockedPathMessages[0] = "It's too dangerous to move that way.";
+	blockedPathMessages[1] = "The trees are too thick to pass.";
+	blockedPathMessages[2] = "A tangle of thorns blocks your way.";
+	blockedPathMessages[3] = "A mysterious force holds you back.";
+	blockedPathMessages[4] = "You can't step over the dragon.";
+	blockedPathMessages[5] = "";	
+	blockedPathMessages[6] = "";		
+	blockedPathMessages[7] = "The wall is too high.";
+	blockedPathMessages[8] = "You can't go through the swamp.";
+	blockedPathMessages[9] = "";		
+	blockedPathMessages[10] = "";
+	blockedPathMessages[11] = "You're too scared to go that way.";
+	blockedPathMessages[12] = "The river is too deep.";
+	blockedPathMessages[13] = "A mysterious force holds you back.";
+	blockedPathMessages[14] = "The gate is locked.";
+	blockedPathMessages[15] = "A tangle of thorns blocks your way.";
+
+	//Set the blocked path messages
+	var helpMessages = [];
+
+	helpMessages[0] = "";
+	helpMessages[1] = "I wonder if you could use something to find out how deep the well is?";
+	helpMessages[2] = "";
+	helpMessages[3] = "";
+	helpMessages[4] = "Maybe with a sword you could slay the dragon and take what it's guarding.";
+	helpMessages[5] = "";
+	helpMessages[6] = "";
+	helpMessages[7] = "";
+	helpMessages[8] = "";
+	helpMessages[9] = "";
+	helpMessages[10] = "";
+	helpMessages[11] = "This seems like a nice place for music.";
+	helpMessages[12] = "Maybe you could take one of these stones.";
+	helpMessages[13] = "";
+	helpMessages[14] = "This needs a key to open.";
+	helpMessages[15] = "";
+
+	//Create the objects and set their locations
+	var items = ["stone"];
+	var itemLocations = [12];
+
+	//An array to store what the player is carrying
+	var backpack = [];
+
+	//Initialize the player's input
+	var playersInput = "";
+
+	//Initialize the gameMessage
+	var gameMessage = "<b>Welcome to the Silver Forest of Thorn!</b>"
+	gameMessage += "<br><br>Click the text box below and type a word to begin! Type help at any time!";
+
+	//Create an array of actions the game understands and a variable to store the current action
+	var actionsIKnow 
+	  = ["north", "east", "south", "west", "help", "take", "use", "drop"];
+	var action = "";
+
+	//An array of items the game understands and a variable to store the current item
+	var itemsIKnow = ["flute", "stone", "sword", "key"];
+	var item = "";
+
+	//The img element
+	var image = document.querySelector("img");
+
+	//The input and output fields
+	var output = document.querySelector("#output");
+	var input = document.querySelector("#input");
+
+	//The button
+	var button = document.querySelector("button");
+	button.style.cursor = "pointer";
+	button.addEventListener("click", clickHandler, false);
+	button.addEventListener("mousedown", mousedownHandler, false);
+	button.addEventListener("mouseout", mouseoutHandler, false);
+	
+	//Listen for touches
+	button.addEventListener("touchstart", keydownHandler, false);
+
+	//Listen for enter key presses and touches
+	window.addEventListener("keydown", keydownHandler, false);
+	window.addEventListener("touchstart", keydownHandler, false);
+
+	//Dispay the player's location
+	render();
+
+	function mousedownHandler()
+	{
+		button.style.background = "-webkit-linear-gradient(top, rgba(0, 0, 0, 0.2), rgba(255, 255, 255, 0.3))";
+		button.style.background = "-moz-linear-gradient(top, rgba(0, 0, 0, 0.2), rgba(255, 255, 255, 0.3))";
+		button.style.background = "linear-gradient(top, rgba(0, 0, 0, 0.2), rgba(255, 255, 255, 0.3))";
+	}
+
+	function mouseoutHandler()
+	{
+		button.style.background = "-webkit-linear-gradient(top, rgba(255, 255, 255, 0.6), rgba(0, 0, 0, 0.2))";
+		button.style.background = "-moz-linear-gradient(top, rgba(255, 255, 255, 0.6), rgba(0, 0, 0, 0.2))";
+		button.style.background = "linear-gradient(top, rgba(255, 255, 255, 0.6), rgba(0, 0, 0, 0.2))";
+	}
+
+	function clickHandler()
+	{
+		button.style.background = "-webkit-linear-gradient(top, rgba(255, 255, 255, 0.6), rgba(0, 0, 0, 0.2))";
+		button.style.background = "-moz-linear-gradient(top, rgba(255, 255, 255, 0.6), rgba(0, 0, 0, 0.2))";
+		button.style.background = "linear-gradient(top, rgba(255, 255, 255, 0.6), rgba(0, 0, 0, 0.2))";
+
+		playGame();
+	}
+
+	function keydownHandler(event)
+	{
+		if(event.touchstart == true)
+		{
+			playGame();
+		}
+		if(event.keyCode === 13) //can press enter key too
+		{
+			playGame();
+		}
+	}
+
+	function playGame()
+	{
+		//Get the player's input and convert it to lowercase
+		playersInput = input.value;
+		playersInput = playersInput.toLowerCase();
+
+		//Reset these variables from the previous turn
+		gameMessage = "";
+		action = "";
+
+		//Figure out the player's action
+		for(i = 0; i < actionsIKnow.length; i++)
+		{
+			if(playersInput.indexOf(actionsIKnow[i]) !== -1)
+			{
+				action = actionsIKnow[i];
+				//console.log("player's action: " + action);
+				break;
+			}
+		}
+
+		//Figure out the item the player wants
+		for(i = 0; i < itemsIKnow.length; i++)
+		{
+			if(playersInput.indexOf(itemsIKnow[i]) !== -1)
+			{
+				item = itemsIKnow[i];
+				//console.log("player's item: " + item);
+			}
+		}
+
+		//Choose the correct action
+		switch(action)
+		{
+			case "north":
+			if(mapLocation >= 4)
+			{
+				mapLocation -= 4;
+			}
+			else
+			{
+				gameMessage = blockedPathMessages[mapLocation];
+			}
+			break;
+
+			case "east":
+			if(mapLocation % 4 != 3)
+			{
+				mapLocation += 1;
+			}
+			else
+			{
+				gameMessage = blockedPathMessages[mapLocation];
+			}
+			break;
+
+			case "south":
+			if(mapLocation < 12)
+			{
+				mapLocation += 4;
+			}
+			else
+			{
+				gameMessage = blockedPathMessages[mapLocation];
+			}
+			break;
+
+			case "west":
+			if(mapLocation % 4 != 0)
+			{
+				mapLocation -= 1;
+			}
+			else
+			{
+				gameMessage = blockedPathMessages[mapLocation];
+			}
+			break;
+
+			case "help":
+			//Display a hint if there is one for this location
+			if(helpMessages[mapLocation] !== "")
+			{
+				gameMessage = helpMessages[mapLocation] + " ";
+			}
+			gameMessage += "Try any of these words or combo of words: " 
+			gameMessage += "north, east, south, west, take, drop, ";
+			gameMessage += "use, stone, flute, sword, key.";
+			break;
+
+			case "take":
+				takeItem()
+				break;
+
+			case "drop":
+				dropItem();
+				break;
+
+			case "use":
+				useItem();
+				break;
+
+			default:
+				gameMessage = "I don't understand that.";
+		}
+
+		//Render the game
+		render();
+	}
+
+	function takeItem()
+	{
+		//Find the index number of the item in the items array
+		var itemIndexNumber = items.indexOf(item);
+
+		//Does the item exist in the game world and is it at the player's current location?
+		if(itemIndexNumber !== -1 && itemLocations[itemIndexNumber] === mapLocation)
+		{
+			gameMessage = "You take the " + item + ".";
+
+			//Add the item to the player's backpack 
+			backpack.push(item);
+
+			//Remove the item from the game world
+			items.splice(itemIndexNumber, 1);
+			itemLocations.splice(itemIndexNumber, 1);
+		}
+		else
+		{
+			//Message if you try and take an item that isn't in the current location
+			gameMessage = "You can't do that.";
+		}
+	}
+
+	function dropItem()
+	{
+		//Try to drop the item only if the backpack isn't empty
+		if(backpack.length !== 0)
+		{
+			//Find the item's array index number in the backpack
+			var backpackIndexNumber = backpack.indexOf(item);
+
+			//The item is in the backpack if backpackIndex number isn't -1
+			if(backpackIndexNumber !== -1)
+			{
+				//Tell the player that the item has been dropped
+				gameMessage = "You drop the " + item + ".";
+
+				//Add the item from the backpack to the game world 
+				items.push(backpack[backpackIndexNumber]);
+				itemLocations.push(mapLocation); 
+
+				//Remove the item from the player's backpack 
+				backpack.splice(backpackIndexNumber, 1);
+			}
+			else
+			{
+				//Message if the player tries to drop something that's not in the backpack
+				gameMessage = "You can't do that.";
+			}
+		}
+		else
+		{
+			//Message if the backpack is empty
+			gameMessage = "You're not carrying anything.";
+		}
+	}
+
+	function useItem()
+	{
+		//1. Find out if the item is in the backpack	  
+		//Find the item's array index number in the backpack
+		var backpackIndexNumber = backpack.indexOf(item);
+
+		//If the index number is -1, then it isn't in the backpack. Tell the player that he or she isn't carrying it.
+		if(backpackIndexNumber === -1)
+		{
+			gameMessage = "You're not carrying it.";
+		}
+
+		//If there are no items in the backpack, then tell the player the backpack is empty
+		if(backpack.length === 0)
+		{
+			gameMessage += " Your backpack is empty";
+		}
+
+		//2. If the item is found in the backpack, figure out what to do with it
+		if(backpackIndexNumber !== -1)
+		{
+			switch(item)
+			{
+				case "stone":
+					if(mapLocation === 1)
+					{
+						gameMessage = "You drop the stone in the well.";
+						gameMessage += " A magical flute appears!";
+
+						//Remove the stone from the player's backpack
+						backpack.splice(backpackIndexNumber, 1);
+
+						//Add the flute to the world
+						items.push("flute");
+						itemLocations.push(mapLocation);
+
+						//Reset the location's help message
+						helpMessages[mapLocation] = "";
+					}
+					else
+					{
+						gameMessage	= "You fumble with the stone in your pocket.";
+					}
+				break;			
+			
+				case "flute":
+					if(mapLocation === 11)
+					{
+						gameMessage = "Beautiful music fills the air. ";
+						gameMessage += "A wise old man steps outside " 
+						gameMessage += "and offers you a sword!";
+
+						//Add the sword to the world
+						items.push("sword");
+						itemLocations.push(mapLocation);
+
+						//Reset the location's help message
+						helpMessages[mapLocation] = "";
+					}
+					else
+					{
+						gameMessage = "You try and play the flute " 
+						gameMessage += "but it makes no sound here.";
+					}
+				break;
+
+				case "sword":
+					if(mapLocation === 4)
+					{
+						gameMessage = "You swing the sword and slay the dragon! ";
+						gameMessage += "You see the key it was guarding.";
+
+						//Add the key to the world
+						items.push("key");
+						itemLocations.push(mapLocation);
+
+						//Reset the location's help message
+						helpMessages[mapLocation] = "";  
+					}
+					else
+					{
+						gameMessage = "You swing the sword listlessly.";
+					}
+				break;
+
+				case "key":
+					if(mapLocation === 14)
+					{
+						gameMessage = "The gate opens! You made it through the Silver Forest of Thorn!";
+						gameMessage += "<br>Game over!";
+						
+						//Remove input field and button after win  
+						input.remove();
+						button.remove();						
+					}
+					else
+					{
+						gameMessage = "This won't work here.";
+					}
+				break;	 
+			}
+		}
+	}
+
+	function render()
+	{
+		//Render the location
+		output.innerHTML = map[mapLocation];
+		image.src = "images/" + images[mapLocation];
+
+		//Display an item if there's one in this location
+		//1. Loop through all the game items
+		for(var i = 0; i < items.length; i++)
+		{
+			//Find out if there's an item at this location
+			if(mapLocation === itemLocations[i])
+			{
+				//Display it
+				output.innerHTML += "<br>You see a <strong>" + items[i] + "</strong> here.";
+			}
+		}
+
+		//Display the player's backpack contents
+		if(backpack.length !== 0)
+		{
+			output.innerHTML += "<br>You are carrying: " + backpack.join(", ");  
+		}
+
+		//Display the game message
+		output.innerHTML += "<br><em>" + gameMessage + "</em>";
+
+		//Clear the input field
+		input.value = "";
+	}
+</script>
